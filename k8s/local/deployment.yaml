@@ -1,0 +1,82 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: sportbook
+  name: sportbook
+spec:
+  selector:
+    matchLabels:
+      app: sportbook
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: sportbook
+    spec:
+      dnsPolicy: ClusterFirst
+      dnsConfig:
+        nameservers:
+          - 8.8.8.8
+          - 8.8.4.4
+      initContainers:
+        - name: install
+          workingDir: /usr/src/app/
+          args:
+            - /bin/sh
+            - -c
+            - npm install
+          image: node:22-alpine
+          imagePullPolicy: Always
+          volumeMounts:
+            - name: code
+              mountPath: /usr/src/app/
+      containers:
+        - name: app
+          workingDir: /usr/src/app/
+          args:
+            - /bin/sh
+            - -c
+            - npm install && npm run dev
+          image: node:22-alpine
+          imagePullPolicy: Always
+          env:
+            - name: PORT
+              value: '3000'
+          ports:
+            - containerPort: 3000
+              protocol: TCP
+          volumeMounts:
+            - name: code
+              mountPath: /usr/src/app/
+      volumes:
+        - name: code
+          persistentVolumeClaim:
+            claimName: sportbook-code
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: sportbook-code
+spec:
+  storageClassName: local-path
+  capacity:
+    storage: 5Gi
+  accessModes:
+    - ReadWriteMany
+  hostPath:
+    path: '/var/qt/sportbook/'
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: sportbook-code
+spec:
+  storageClassName: local-path
+  volumeName: sportbook-code
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 5Gi

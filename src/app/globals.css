@@ -1,26 +1,31 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg-app: #f0fdf4;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --font-sans: var(--font-manrope);
+  --font-mono: var(--font-space-grotesk);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  min-height: 100vh;
+  font-family: var(--font-manrope), sans-serif;
+  background: radial-gradient(ellipse at 10% 5%, rgba(5,150,105,0.10) 0%, transparent 50%),
+              radial-gradient(ellipse at 90% 95%, rgba(245,158,11,0.08) 0%, transparent 50%),
+              var(--bg-app);
+  color: #0f172a;
+}
+
+.card-hover {
+  transition: all 0.2s ease;
+}
+.card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 24px -8px rgba(0,0,0,0.12);
+}
+
+.hero-gradient {
+  background: linear-gradient(135deg, #022c22 0%, #064e3b 40%, #047857 70%, #065f46 100%);
 }

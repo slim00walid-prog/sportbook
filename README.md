@@ -1,36 +1,95 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# SportBook — Plateforme de Réservation de Terrains de Sport
 
-## Getting Started
+Conforme au cahier des charges. Développé avec Next.js 16, TypeScript, Tailwind CSS, PostgreSQL, Prisma ORM.
 
-First, run the development server:
+## Démarrage rapide
 
 ```bash
+npm install
+cp .env.example .env
+# PostgreSQL doit tourner sur localhost:5432
+npm run db:push
+npm run db:seed
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Application : http://localhost:3000
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Comptes de démonstration (seed)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Rôle | Email | Mot de passe |
+|------|-------|-------------|
+| Administrateur | admin@sportbook.local | password123 |
+| Gestionnaire | manager@sportbook.local | password123 |
+| Utilisateur | user@sportbook.local | password123 |
 
-## Learn More
+L'administrateur est créé automatiquement par le seed. Il peut ensuite promouvoir des utilisateurs en gestionnaires ou administrateurs depuis le panneau d'administration.
 
-To learn more about Next.js, take a look at the following resources:
+## Navigation par rôle
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- **Utilisateur** : Accueil → Terrains → Réservation → Dashboard (mes réservations)
+- **Gestionnaire** : Accueil → Dashboard → Gestion du complexe (terrains, équipements)
+- **Administrateur** : Accueil → Dashboard → Administration (utilisateurs, complexes, stats)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Fonctionnalités
 
-## Deploy on Vercel
+### Utilisateurs
+- Inscription, connexion, déconnexion (JWT + cookie HttpOnly)
+- Redirection automatique si déjà connecté
+- Recherche de terrains (sport, ville, prix)
+- Réservation d'un créneau avec contrôle de disponibilité
+- Paiement simulé (mock)
+- Dashboard : historique, statut, annulation
+- Dépôt d'avis (5 étoiles + commentaire)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Gestionnaires
+- Dashboard dédié avec vue du complexe rattaché
+- Liste des terrains avec équipements et horaires
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### Administrateurs
+- Dashboard avec statistiques globales (utilisateurs, complexes, revenus)
+- Gestion des utilisateurs (changement de rôle, suppression)
+- Vue des complexes avec managers assignés
+
+## API REST
+
+| Méthode | Route | Accès |
+|---------|-------|-------|
+| POST | /api/auth/register | Public |
+| POST | /api/auth/login | Public |
+| POST | /api/auth/logout | Authentifié |
+| GET | /api/me | Authentifié |
+| GET | /api/terrains | Public |
+| GET | /api/terrains/[id] | Public |
+| POST | /api/terrains | MANAGER, ADMIN |
+| PATCH | /api/terrains/[id] | MANAGER, ADMIN |
+| DELETE | /api/terrains/[id] | MANAGER, ADMIN |
+| GET | /api/reservations | Authentifié |
+| POST | /api/reservations | USER |
+| PATCH | /api/reservations/[id]/cancel | Authentifié |
+| POST | /api/reviews | USER |
+| GET | /api/admin/stats | ADMIN |
+| GET | /api/admin/users | ADMIN |
+| PATCH | /api/admin/users/[id] | ADMIN |
+| DELETE | /api/admin/users/[id] | ADMIN |
+| GET | /api/admin/complexes | ADMIN |
+| POST | /api/admin/complexes | ADMIN |
+
+## Architecture
+
+- `prisma/schema.prisma` — Modèle de données
+- `src/app/api/` — Routes API (App Router Next.js)
+- `src/components/` — Composants React réutilisables
+- `src/lib/` — Utilitaires (auth, prisma, http, time)
+- `src/app/` — Pages (landing, login, register, terrains, dashboards)
+
+## Stack technique
+
+- Next.js 16 (Turbopack)
+- TypeScript
+- Tailwind CSS
+- PostgreSQL
+- Prisma ORM
+- JWT (jsonwebtoken + bcryptjs)
+- Zod (validation)
+- Lucide React (icônes)

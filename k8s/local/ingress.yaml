@@ -1,0 +1,26 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: sportbook
+  annotations:
+    nginx.ingress.kubernetes.io/enable-cors: "true"
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    use-proxy-protocol: "true"
+    use-forwarded-headers: "true"
+spec:
+  ingressClassName: nginx
+  tls:
+    - secretName: all-quicktext-local
+      hosts:
+        - sportbook.quicktext.local
+  rules:
+    - host: sportbook.quicktext.local
+      http:
+        paths:
+          - path: /
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: sportbook
+                port:
+                  number: 80

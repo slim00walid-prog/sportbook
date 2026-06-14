@@ -1,0 +1,28 @@
+import { getSessionUserFromRequest } from "@/lib/auth";
+import { forbidden, ok, unauthorized } from "@/lib/http";
+import { prisma } from "@/lib/prisma";
+import type { NextRequest } from "next/server";
+
+export async function GET(request: NextRequest) {
+  const session = getSessionUserFromRequest(request);
+  if (!session) return unauthorized();
+  if (session.role !== "ADMIN") return forbidden();
+
+  const [users, complexes, terrains, reservations, payments] = await Promise.all([
+    prisma.user.count(),
+    prisma.complex.count(),
+    prisma.terrain.count(),
+    prisma.reservation.count(),
+    prisma.payment.aggregate({ _sum: { amountCents: true }, where: { status: "PAID" } }),
+  ]);
+
+  return ok({
+    stats: {
+      users,
+      complexes,
+      terrains,
+      reservations,
+      revenue: payments._sum.amountCents ?? 0,
+    },
+  });
+}

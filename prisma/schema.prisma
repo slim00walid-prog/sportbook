@@ -1,0 +1,150 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  USER
+  MANAGER
+  ADMIN
+}
+
+enum SportType {
+  FOOTBALL
+  TENNIS
+  BASKETBALL
+  PADEL
+}
+
+enum ReservationStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  REJECTED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
+enum ReviewStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model User {
+  id                 String        @id @default(cuid())
+  email              String        @unique
+  passwordHash       String
+  firstName          String
+  lastName           String
+  phone              String?
+  photoUrl           String?
+  role               UserRole      @default(USER)
+  resetToken         String?       @unique
+  resetTokenExpiresAt DateTime?
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+  reservations       Reservation[]
+  reviews            Review[]
+  complexes          Complex[]
+}
+
+model Complex {
+  id          String    @id @default(cuid())
+  name        String
+  city        String
+  district    String
+  address     String
+  description String?
+  managerId   String?
+  manager     User?     @relation(fields: [managerId], references: [id])
+  terrains    Terrain[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Terrain {
+  id                String             @id @default(cuid())
+  complexId         String
+  complex           Complex            @relation(fields: [complexId], references: [id], onDelete: Cascade)
+  name              String
+  sportType         SportType
+  pricePerHourCents Int
+  openTime          String
+  closeTime         String
+  equipment         String[]
+  photos            String[]
+  reservations      Reservation[]
+  maintenanceBlocks MaintenanceBlock[]
+  reviews           Review[]
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+}
+
+model MaintenanceBlock {
+  id        String   @id @default(cuid())
+  terrainId String
+  terrain   Terrain  @relation(fields: [terrainId], references: [id], onDelete: Cascade)
+  startAt   DateTime
+  endAt     DateTime
+  reason    String?
+  createdAt DateTime @default(now())
+}
+
+model Reservation {
+  id            String            @id @default(cuid())
+  userId        String
+  user          User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  terrainId     String
+  terrain       Terrain           @relation(fields: [terrainId], references: [id], onDelete: Cascade)
+  startAt       DateTime
+  endAt         DateTime
+  totalCents    Int
+  status        ReservationStatus @default(PENDING)
+  paymentStatus PaymentStatus     @default(PENDING)
+  payment       Payment?
+  invoiceUrl    String?
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  @@index([terrainId, startAt, endAt])
+}
+
+model Payment {
+  id            String         @id @default(cuid())
+  reservationId String         @unique
+  reservation   Reservation    @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+  provider      String
+  amountCents   Int
+  currency      String         @default("EUR")
+  status        PaymentStatus
+  transactionId String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+}
+
+model Review {
+  id        String       @id @default(cuid())
+  userId    String
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  terrainId String
+  terrain   Terrain      @relation(fields: [terrainId], references: [id], onDelete: Cascade)
+  rating    Int
+  comment   String?
+  status    ReviewStatus @default(PENDING)
+  createdAt DateTime     @default(now())
+}
